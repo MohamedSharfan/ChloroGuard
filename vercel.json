@@ -1,15 +1,8 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "frontend_quick/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/frontend_quick/$1"
+      "source": "/(.*)",
+      "destination": "/frontend_quick/upload.html"
     }
   ]
 }
