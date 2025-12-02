@@ -1,8 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/frontend_quick/upload.html"
-    }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
