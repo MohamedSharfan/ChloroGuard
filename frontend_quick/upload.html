@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChloroGuard - Plant Disease Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #666;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                border-radius: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #01713d;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 480px) {
+            .header p {
+                font-size: 1em;
+            }
+        }
+
+        .upload-area {
+            border: 3px dotted #08690a;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        @media (max-width: 768px) {
+            .upload-area {
+                padding: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .upload-area {
+                padding: 25px 15px;
+            }
+        }
+
+        .upload-area:hover {
+            border-color: #019528;
+            background: #dff4e3;
+        }
+
+        .upload-area.dragover {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .upload-icon {
+                font-size: 3em;
+            }
+        }
+
+        .upload-text {
+            color: #00711b;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .upload-text {
+                font-size: 1.1em;
+            }
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 480px) {
+            .upload-hint {
+                font-size: 0.85em;
+            }
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-area {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .preview-image {
+                max-height: 300px;
+                object-fit: contain;
+            }
+        }
+
+        .results {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .results {
+                padding: 15px;
+            }
+        }
+
+        .prediction {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 480px) {
+            .prediction {
+                padding: 12px;
+                font-size: 0.95em;
+            }
+        }
+
+        .prediction.primary {
+            background-color: #019528;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .prediction.primary {
+                font-size: 1.05em;
+            }
+        }
+
+        .disease-name {
+            flex: 1;
+            word-wrap: break-word;
+        }
+
+        .confidence {
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        @media (max-width: 480px) {
+            .confidence {
+                padding: 4px 12px;
+                font-size: 0.9em;
+            }
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background-color: #01713d;
+            transition: width 0.5s ease;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media (max-width: 480px) {
+            .loading {
+                padding: 20px;
+            }
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007b31;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                padding: 10px 25px;
+                font-size: 0.95em;
+                width: 100%;
+            }
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(141, 225, 130, 0.4);
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            word-wrap: break-word;
+        }
+
+        @media (max-width: 480px) {
+            .error {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+        }
+
+        .supported-plants {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 480px) {
+            .supported-plants {
+                padding: 15px;
+            }
+        }
+
+        .supported-plants h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .supported-plants h3 {
+                font-size: 1.1em;
+            }
+        }
+
+        .plant-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .chip {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #2e7d32;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 480px) {
+            .chip {
+                padding: 6px 12px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#314D1C"><path d="M317-140h326l48-190H269l48 190Zm0 60q-20 0-36.29-12.54Q264.43-105.08 259-125l-52-205h546l-52 205q-5.43 19.92-21.71 32.46Q663-80 643-80H317ZM180-390h600v-100H180v100Zm301-251q0-87 75-160.5T719-880q-3 81-67 150.5T510-645v95h330v160q0 24.75-17.62 42.37Q804.75-330 780-330H180q-24.75 0-42.37-17.63Q120-365.25 120-390v-160h330v-95q-78-15-141.5-84.5T241-880q88 5 164 78t76 161Z"/></svg>ChloroGuard</h1>
+            <p>AI-Powered Plant Disease Detection</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#314D1C"><path d="M450-313v-371L330-564l-43-43 193-193 193 193-43 43-120-120v371h-60ZM220-160q-24 0-42-18t-18-42v-143h60v143h520v-143h60v143q0 24-18 42t-42 18H220Z"/></svg></div>
+            <div class="upload-text">Click to upload or drag & drop</div>
+            <div class="upload-hint">Supports: JPG, PNG</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="preview-area" id="previewArea">
+            <img id="previewImage" class="preview-image" alt="Preview">
+            <button class="btn" onclick="analyzeImage()">Analyze</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing your plant image...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results" style="display: none;">
+            <h3>Diagnosis Results</h3>
+            <div id="predictions"></div>
+        </div>
+
+        <div class="supported-plants">
+            <h3>Supported Plants</h3>
+            <div class="plant-chips">
+                <span class="chip">Pepper</span>
+                <span class="chip">Tomato</span>
+                <span class="chip">Potato</span>
+            </div>
+            <p style="margin-top: 10px; color: #818080; font-size: 0.9em;">
+                Detects 15 different diseases and healthy conditions
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let selectedFile = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewArea = document.getElementById('previewArea');
+        const previewImage = document.getElementById('previewImage');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const predictions = document.getElementById('predictions');
+        const errorDiv = document.getElementById('error');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select an image file');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size must be less than 10MB');
+                return;
+            }
+
+            selectedFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewArea.style.display = 'block';
+                results.style.display = 'none';
+                errorDiv.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile) return;
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch(`${API_URL}/predict/detailed`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.detail || `Server error: ${response.status}`;
+                    throw new Error(errorMsg);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                let errorMsg = 'Failed to analyze image. ';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg += 'Cannot connect to server. Make sure both servers are running (use START_COMPLETE.bat).';
+                } else {
+                    errorMsg += error.message;
+                }
+                showError(errorMsg);
+                console.error('Full error:', error);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            predictions.innerHTML = '';
+
+            const sortedPredictions = Object.entries(data.all_predictions)
+                .map(([disease, confidence]) => ({
+                    disease: disease.replace(/_/g, ' ').replace(/  /g, ' - '),
+                    confidence: confidence
+                }))
+                .sort((a, b) => b.confidence - a.confidence)
+                .slice(0, 5); 
+
+            sortedPredictions.forEach((pred, index) => {
+                const isPrimary = index === 0;
+                const predDiv = document.createElement('div');
+                predDiv.className = `prediction ${isPrimary ? 'primary' : ''}`;
+                
+                predDiv.innerHTML = `
+                    <div class="disease-name">
+                        ${isPrimary ? ' ' : `${index}. `}${pred.disease}
+                    </div>
+                    <div class="confidence">${pred.confidence.toFixed(2)}%</div>
+                `;
+
+                if (isPrimary) {
+                    const barDiv = document.createElement('div');
+                    barDiv.className = 'confidence-bar';
+                    barDiv.innerHTML = `<div class="confidence-fill" style="width: ${pred.confidence}%"></div>`;
+                    predDiv.appendChild(barDiv);
+                }
+
+                predictions.appendChild(predDiv);
+            });
+
+            results.style.display = 'block';
+        }
+
+        function showError(message) {
+            errorDiv.textContent = ' ' + message;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
