@@ -1,8 +1,9 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
-from model_utils import load_model, predict_disease, get_model_info
+from .model_utils import load_model, predict_disease, get_model_info
 import os
 
 app = FastAPI(
@@ -18,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+FRONTEND_PATH = os.path.join(os.path.dirname(__file__), "..", "frontend_quick")
+app.mount("/static", StaticFiles(directory=FRONTEND_PATH), name="static")
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "plant_disease_mobilenetv2_deploy.keras")
 
@@ -37,7 +41,13 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Root endpoint - API health check."""
+    """Serve the frontend HTML."""
+    return FileResponse(os.path.join(FRONTEND_PATH, "index.html"))
+
+
+@app.get("/api")
+async def api_root():
+    """API health check."""
     return {
         "message": "ChloroGuard API is running",
         "status": "healthy",
