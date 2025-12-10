@@ -23,47 +23,28 @@ CLASS_NAMES = [
 
 model = None
 
-def load_model(model_path: str):
-    """Load the trained model from disk."""
-    global model
-    try:
-        model = tf.keras.models.load_model(model_path, compile=False)
-        print(f"✓ Model loaded successfully from {model_path}")
-        return model
-    except Exception as e:
-        print(f"✗ Error loading model: {e}")
-        raise
+
 
 
 def preprocess_image(image_bytes: bytes, target_size=(224, 224)):
-    """
-    Preprocess image for model prediction.
-    
-    Args:
-        image_bytes: Raw image bytes from uploaded file
-        target_size: Target size for the image (width, height)
-    
-    Returns:
-        Preprocessed numpy array ready for model prediction
-    """
     try:
         img = Image.open(io.BytesIO(image_bytes))
         
         if img.mode != 'RGB':
             img = img.convert('RGB')
-        
-        img = img.resize(target_size)
-        
         img_array = np.array(img)
         
         img_array = np.expand_dims(img_array, axis=0)
         
         img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
+        img = img.resize(target_size)
+        
+        
         
         return img_array
     
     except Exception as e:
-        print(f"✗ Error preprocessing image: {e}")
+        print(f"Error preprocessing image: {e}")
         raise
 
 

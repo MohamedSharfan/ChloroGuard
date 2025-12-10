@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
-from .model_utils import load_model, predict_disease, get_model_info
+from .model_utils import  predict_disease, get_model_info
 import os
+import tensorflow as tf
 
 app = FastAPI(
     title="ChloroGuard API",
@@ -27,41 +28,24 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "plant_dise
 
 @app.on_event("startup")
 async def startup_event():
-    """Load the model when the API starts."""
     try:
         if os.path.exists(MODEL_PATH):
-            load_model(MODEL_PATH)
-            print(f"✓ Model loaded from: {MODEL_PATH}")
+            tf.keras.models.load_model(MODEL_PATH, compile = False)
+            print(f"Model loaded from: {MODEL_PATH}")
         else:
-            print(f"⚠ Warning: Model file not found at {MODEL_PATH}")
-            print("  Please train your model first or update MODEL_PATH")
+            print(f"Model file not found at {MODEL_PATH}")
     except Exception as e:
-        print(f"✗ Error loading model: {e}")
+        print(f"Error loading model: {e}")
 
 
 @app.get("/")
 async def root():
-    """Serve the frontend HTML."""
     return FileResponse(os.path.join(FRONTEND_PATH, "index.html"))
 
-
-@app.get("/api")
-async def api_root():
-    """API health check."""
-    return {
-        "message": "ChloroGuard API is running",
-        "status": "healthy",
-        "endpoints": {
-            "predict": "/predict (POST - upload image)",
-            "health": "/health (GET)",
-            "model_info": "/model/info (GET)"
-        }
-    }
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
     model_info = get_model_info()
     return {
         "status": "healthy",
@@ -79,15 +63,7 @@ async def model_information():
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    """
-    Predict plant disease from uploaded leaf image.
     
-    Args:
-        file: Uploaded image file (JPG, PNG, etc.)
-    
-    Returns:
-        JSON with prediction results including disease class and confidence
-    """
     if not file.content_type.startswith("image/"):
         raise HTTPException(
             status_code=400,
