@@ -115,6 +115,10 @@ async def predict(file: UploadFile = File(...)):
 
             formatted_class = predicted_class.replace('_',' ').replace(' ',' - ')
 
+            all_predictions = {
+                class_names[i]: float(prediction[0][i] * 100)  
+                for i in range(len(class_names))
+            }
         except Exception as e:
             raise ValueError(f"Error during prediction: {e}")
 
@@ -126,6 +130,7 @@ async def predict(file: UploadFile = File(...)):
             "confidence": confidence*100,
             "confidence_score": confidence,
             "top_predictions": top3_prediction,
+            "all_predictions":all_predictions,
             "status": "success"
         })
     
@@ -136,6 +141,7 @@ async def predict(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Error processing image: {str(e)}"
         )
+
 
 if __name__ == "__main__":
     print("Starting ChloroGuard API...")
