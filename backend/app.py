@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
-from .model_utils import  predict_disease, get_model_info
 import os
 import numpy as np
 import tensorflow as tf
@@ -71,23 +70,6 @@ async def root():
     return FileResponse(os.path.join(FRONTEND_PATH, "index.html"))
 
 
-
-@app.get("/health")
-async def health_check():
-    model_info = get_model_info()
-    return {
-        "status": "healthy",
-        "model_loaded": model_info.get("loaded", False),
-        "model_path": MODEL_PATH,
-        "model_exists": os.path.exists(MODEL_PATH)
-    }
-
-
-@app.get("/model/info")
-async def model_information():
-    return get_model_info()
-
-
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     
@@ -134,11 +116,8 @@ async def predict(file: UploadFile = File(...)):
             formatted_class = predicted_class.replace('_',' ').replace(' ',' - ')
 
         except Exception as e:
-            raise ValueError("Error during prediction: {e}")
+            raise ValueError(f"Error during prediction: {e}")
 
-        # result = predict_disease(image_bytes)
-        
-        
         
         return JSONResponse(content={
             "filename": file.filename,
@@ -157,51 +136,6 @@ async def predict(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Error processing image: {str(e)}"
         )
-
-
-@app.post("/predict/detailed")
-async def predict_detailed(file: UploadFile = File(...)):
-    """
-    Predict plant disease with detailed probability for all classes.
-    
-    Args:
-        file: Uploaded image file
-    
-    Returns:
-        JSON with detailed prediction results for all classes
-    """
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(
-            status_code=400,
-            detail="File must be an image"
-        )
-    
-    try:
-        image_bytes = await file.read()
-        result = predict_disease(image_bytes)
-        
-        if not result.get("success", False):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Prediction failed: {result.get('error', 'Unknown error')}"
-            )
-        
-        return JSONResponse(content={
-            "filename": file.filename,
-            "prediction": result["formatted_class"],
-            "confidence": result["confidence_percentage"],
-            "all_predictions": result["all_predictions"],
-            "status": "success"
-        })
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing image: {str(e)}"
-        )
-
 
 if __name__ == "__main__":
     print("Starting ChloroGuard API...")
