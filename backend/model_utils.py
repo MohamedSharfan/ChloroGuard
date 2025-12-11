@@ -49,15 +49,7 @@ def preprocess_image(image_bytes: bytes, target_size=(224, 224)):
 
 
 def predict_disease(image_bytes: bytes):
-    """
-    Predict disease from leaf image.
-    
-    Args:
-        image_bytes: Raw image bytes from uploaded file
-    
-    Returns:
-        Dictionary with prediction results including class name and confidence
-    """
+ 
     global model
     
     if model is None:
@@ -83,7 +75,7 @@ def predict_disease(image_bytes: bytes):
             {
                 "class": CLASS_NAMES[idx],
                 "confidence": float(predictions[0][idx])
-            }
+            }   
             for idx in top_3_indices
         ]
         
